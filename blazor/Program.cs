@@ -1,5 +1,6 @@
 using blazor.Data;
 using blazor.Pages;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<MyClass>();
+
+builder.Services.AddDbContext<BloggingContext>(option => option.UseSqlite());
 
 var app = builder.Build();
 

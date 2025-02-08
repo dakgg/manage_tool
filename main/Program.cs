@@ -27,5 +27,4 @@ await db.SaveChangesAsync();
 
 // Delete
 Console.WriteLine("Delete the blog");
-db.Remove(blog);
 await db.SaveChangesAsync();
