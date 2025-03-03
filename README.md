@@ -1,5 +1,14 @@
 # manage_tool
 
-Blazor Server
+### How to Use
 
-EF Core
+``` shell
+# use this script in main project
+dotnet tool install --global dotnet-ef
+dotnet ef database update     
+```
+
+### Development Stck
+- Blazor Server
+- EF Core
+- .NET 8
