@@ -1,0 +1,64 @@
+@page "/gameEvent"
+@using Microsoft.EntityFrameworkCore
+@using dakg;
+@inject BloggingContext DbContext
+
+<h3>게임 이벤트 일정</h3>
+
+<input type="date" @bind="StartDate" />
+
+@if (StartDate != DateTime.MinValue)
+{
+    <p>선택한 날짜: @StartDate.ToString("yyyy-MM-dd")</p>
+}
+
+<input type="date" @bind="EndDate" />
+
+@if (EndDate != DateTime.MinValue)
+{
+    <p>선택한 날짜: @EndDate.ToString("yyyy-MM-dd")</p>
+}
+
+
+@* <!-- 달력 데이터를 저장할 리스트 -->
+<ul>
+    @foreach (var ev in GameEvents)
+    {
+        <li>@ev.Date.ToString("yyyy-MM-dd") - @ev.Name</li>
+    }
+</ul> *@
+
+<!-- 이벤트 추가 폼 -->
+<input type="text" @bind="NewEventName" placeholder="이벤트 이름 입력" />
+<button @onclick="AddEvent">이벤트 추가</button>
+
+@code {
+    private DateTime StartDate { get; set; } = DateTime.Today;
+    private DateTime EndDate { get; set; } = DateTime.Today;
+    private string NewEventName { get; set; } = "";
+    
+    private List<dakg.GameEvent> GameEvents { get; set; } = new List<dakg.GameEvent>();
+
+    private async void AddEvent()
+    {
+        if (string.IsNullOrWhiteSpace(NewEventName)) return;
+
+        var gameEvent = new dakg.GameEvent()
+        {
+            StartTime = StartDate,
+            EndTime = EndDate,
+            Name = NewEventName,
+        };
+
+        await DbContext.Events.AddAsync(gameEvent);
+        await DbContext.SaveChangesAsync();
+        
+        StartDate = EndDate = DateTime.Today;
+        NewEventName = string.Empty;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+       GameEvents = await DbContext.Events.ToListAsync();
+    }
+}
