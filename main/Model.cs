@@ -11,13 +11,13 @@ public class BloggingContext : DbContext
 
     public BloggingContext()
     {
-        DbPath = System.IO.Path.Join(Directory.GetCurrentDirectory(), "../main", "DbFile", "blogging.db");
+        DbPath = System.IO.Path.Join(Directory.GetCurrentDirectory(), "../main", "DbFile", "local.db");
         Console.WriteLine(DbPath);
     }
 
     public BloggingContext(DbContextOptions<BloggingContext> options) : base(options)
     {
-        DbPath = System.IO.Path.Join(Directory.GetCurrentDirectory(), "../main", "DbFile", "blogging.db");
+        DbPath = System.IO.Path.Join(Directory.GetCurrentDirectory(), "../main", "DbFile", "local.db");
         Console.WriteLine(DbPath);
     }
 
