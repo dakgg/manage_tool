@@ -1,7 +1,7 @@
 @page "/gameEvent"
 @using Heron.MudCalendar
 @using Microsoft.EntityFrameworkCore
-@using dakg;
+@using dakg
 @inject BloggingContext DbContext
 @inject ISnackbar Snackbar
 
@@ -25,7 +25,7 @@
 <input type="text" @bind="_eventName" placeholder="이벤트 이름 입력" />
 <button @onclick="AddEventAsync">이벤트 추가</button>
 
-<MudCalendar Items="_events" MonthCellMinHeight="115">
+<MudCalendar Class="mb-4 mt-4" Items="_events" MonthCellMinHeight="115" ShowDay="false" ShowWeek="false">
     <CellTemplate>
         <div style="width: 100%; height: 100%; border: 2px solid @GetColor(((DakgGameEventItem)context).Color)">
             <div style="background-color: @GetColor(((DakgGameEventItem)context).Color)">
@@ -37,8 +37,8 @@
     </CellTemplate>
 </MudCalendar>
 
-<MudTable Items="@_events" Hover="true" MultiSelection="true" Breakpoint="Breakpoint.Sm"
-    @bind-SelectedItems="_selectedItems" LoadingProgressColor="Color.Info">
+<MudTable T="DakgGameEventItem" Items="@_events" Hover="true" MultiSelection="true" Breakpoint="Breakpoint.Sm"
+    SelectedItems="@_selectedItems" SelectedItemsChanged="OnSelectedItemsChanged" LoadingProgressColor="Color.Info">
     <HeaderContent>
         <MudTh>PK</MudTh>
         <MudTh>Start</MudTh>
@@ -51,13 +51,27 @@
         <MudTd DataLabel="End">@context.End</MudTd>
         <MudTd DataLabel="Name">@context.Text</MudTd>
     </RowTemplate>
+    <FooterContent>
+        <MudTd colspan="5">Select All</MudTd>
+    </FooterContent>
 </MudTable>
 
-<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Secondary" FullWidth="true"
-    OnClick="DeleteSelectedEventAsync">
-    Delete</MudButton>
+<MudGrid Justify="Justify.Center">
+    <MudItem>
+        <MudButton Class="m-4 p-3" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete"
+            Disabled="_isDisable" Color="Color.Secondary" OnClick="DeleteSelectedEventAsync">
+            Delete
+        </MudButton>
+    </MudItem>
+</MudGrid>
 
 @code {
+    class DakgGameEventItem : CalendarItem
+    {
+        public int PK { get; set; }
+        public Color Color { get; set; } = Color.Primary;
+    }
+
     DateTime _start { get; set; } = DateTime.Today;
     DateTime _end { get; set; } = DateTime.Today;
     string _eventName { get; set; } = "";
@@ -66,6 +80,7 @@
     List<DakgGameEventItem> _events = new();
     HashSet<DakgGameEventItem> _selectedItems = new();
     List<int> _selectedPks = new();
+    bool _isDisable = true;
 
     async void AddEventAsync()
     {
@@ -114,22 +129,10 @@
         return evi;
     }
 
-    private class DakgGameEventItem : CalendarItem
-    {
-        public int PK { get; set; }
-        public Color Color { get; set; } = Color.Primary;
-    }
-
-    private string GetColor(Color color) => $"var(--mud-palette-{color.ToDescriptionString()})";
+    string GetColor(Color color) => $"var(--mud-palette-{color.ToDescriptionString()})";
 
     async Task DeleteSelectedEventAsync()
     {
-        if (_selectedItems.Count <= 0)
-        {
-            Snackbar.Add("선택된 이벤트가 없습니다", Severity.Info);
-            return;
-        }
-
         foreach (var item in _selectedItems)
         {
             var ge = DbContext.Events.Single(evt => evt.Id == item.PK);
@@ -138,5 +141,10 @@
 
         await DbContext.SaveChangesAsync();
         await InitGameEventDataAsync();
+    }
+
+    void OnSelectedItemsChanged(HashSet<DakgGameEventItem> args)
+    {
+        _isDisable = !_selectedItems.Any();
     }
 }
