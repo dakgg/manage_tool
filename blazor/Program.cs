@@ -12,6 +12,19 @@ builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddDbContext<BloggingContext>(option => option.UseSqlite());
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<BloggingContext>();
+    using (var connection = dbContext.Database.GetDbConnection())
+    {
+        connection.Open();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "PRAGMA journal_mode = DELETE;";
+            command.ExecuteNonQuery();
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
