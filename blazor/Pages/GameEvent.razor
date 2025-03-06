@@ -3,6 +3,7 @@
 @using Microsoft.EntityFrameworkCore
 @using dakg;
 @inject BloggingContext DbContext
+@inject ISnackbar Snackbar
 
 <h3>게임 이벤트 일정</h3>
 
@@ -22,44 +23,60 @@
 
 <!-- 이벤트 추가 폼 -->
 <input type="text" @bind="_eventName" placeholder="이벤트 이름 입력" />
-<button @onclick="AddEvent">이벤트 추가</button>
+<button @onclick="AddEventAsync">이벤트 추가</button>
 
-<MudCalendar Items="_events" MonthCellMinHeight="115"/>
+<MudCalendar Items="_events" MonthCellMinHeight="115">
+    <CellTemplate>
+        <div style="width: 100%; height: 100%; border: 2px solid @GetColor(((DakgGameEventItem)context).Color)">
+            <div style="background-color: @GetColor(((DakgGameEventItem)context).Color)">
+                <MudText Style="color: #ffffff;" Typo="Typo.body1" Align="Align.Center">
+                    @(((DakgGameEventItem)context).Text)
+                </MudText>
+            </div>
+        </div>
+    </CellTemplate>
+</MudCalendar>
 
-<MudTable Items="@_events.Take(4)" Hover="true" MultiSelection="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+<MudTable Items="@_events" Hover="true" MultiSelection="true" Breakpoint="Breakpoint.Sm"
+    @bind-SelectedItems="_selectedItems" LoadingProgressColor="Color.Info">
     <HeaderContent>
+        <MudTh>PK</MudTh>
         <MudTh>Start</MudTh>
         <MudTh>End</MudTh>
         <MudTh>Name</MudTh>
     </HeaderContent>
     <RowTemplate>
+        <MudTd DataLabel="PK">@context.PK</MudTd>
         <MudTd DataLabel="Start">@context.Start</MudTd>
         <MudTd DataLabel="End">@context.End</MudTd>
         <MudTd DataLabel="Name">@context.Text</MudTd>
-        @* <MudTd>
-            <MudButton OnClick="() => Foo()" Color="Color.Primary">수정</MudButton>
-        </MudTd> *@
     </RowTemplate>
 </MudTable>
 
-@code {
-    private DateTime _start { get; set; } = DateTime.Today;
-    private DateTime _end { get; set; } = DateTime.Today;
-    private string _eventName { get; set; } = "";
+<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Secondary" FullWidth="true"
+    OnClick="DeleteSelectedEventAsync">
+    Delete</MudButton>
 
-    private List<dakg.GameEvent> _gameEvents { get; set; } = new List<dakg.GameEvent>();
-    private List<CalendarItem> _events;
-    
-    private async void AddEvent()
+@code {
+    DateTime _start { get; set; } = DateTime.Today;
+    DateTime _end { get; set; } = DateTime.Today;
+    string _eventName { get; set; } = "";
+
+    List<dakg.GameEvent> _gameEvents { get; set; } = new List<dakg.GameEvent>();
+    List<DakgGameEventItem> _events = new();
+    HashSet<DakgGameEventItem> _selectedItems = new();
+    List<int> _selectedPks = new();
+
+    async void AddEventAsync()
     {
         if (string.IsNullOrWhiteSpace(_eventName)) return;
-        
+
         var gameEvent = new dakg.GameEvent()
-        {
-            StartTime = _start,
-            EndTime = _end,
-            Name = _eventName,
-        };
+            {
+                StartTime = _start,
+                EndTime = _end,
+                Name = _eventName,
+            };
 
         await DbContext.Events.AddAsync(gameEvent);
         await DbContext.SaveChangesAsync();
@@ -71,22 +88,55 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await InitGameEventDataAsync();
+    }
+
+    async Task InitGameEventDataAsync()
+    {
         _gameEvents = await DbContext.Events.ToListAsync();
         _events = _gameEvents.Select(ge => ConvertToCalendarItem(ge)).ToList();
     }
 
-    CalendarItem ConvertToCalendarItem(dakg.GameEvent ge)
+    DakgGameEventItem ConvertToCalendarItem(dakg.GameEvent ge)
     {
-        return new CalendarItem()
-        {
-            Start = ge.StartTime,
-            End = ge.EndTime,
-            Text = ge.Name
-        };
+        var evi = new DakgGameEventItem()
+            {
+                Start = ge.StartTime,
+                End = ge.EndTime,
+                Text = ge.Name,
+                PK = ge.Id
+            };
+
+        // set random color
+        var max = Enum.GetValues<MudBlazor.Color>().Length;
+        evi.Color = (MudBlazor.Color)(evi.PK % max);
+
+        return evi;
     }
 
-    void Foo()
+    private class DakgGameEventItem : CalendarItem
     {
+        public int PK { get; set; }
+        public Color Color { get; set; } = Color.Primary;
+    }
 
+    private string GetColor(Color color) => $"var(--mud-palette-{color.ToDescriptionString()})";
+
+    async Task DeleteSelectedEventAsync()
+    {
+        if (_selectedItems.Count <= 0)
+        {
+            Snackbar.Add("선택된 이벤트가 없습니다", Severity.Info);
+            return;
+        }
+
+        foreach (var item in _selectedItems)
+        {
+            var ge = DbContext.Events.Single(evt => evt.Id == item.PK);
+            DbContext.Events.Remove(ge);
+        }
+
+        await DbContext.SaveChangesAsync();
+        await InitGameEventDataAsync();
     }
 }
