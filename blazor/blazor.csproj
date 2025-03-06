@@ -2,6 +2,10 @@
   <ItemGroup>
     <ProjectReference Include="..\main\main.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Heron.MudCalendar" Version="3.0.0" />
+    <PackageReference Include="MudBlazor" Version="8.3.0" />
+  </ItemGroup>
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>

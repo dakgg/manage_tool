@@ -1,14 +1,12 @@
-using blazor.Data;
-using blazor.Pages;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
-
+builder.Services.AddMudServices();
 builder.Services.AddDbContext<BloggingContext>(option => option.UseSqlite());
 
 var app = builder.Build();

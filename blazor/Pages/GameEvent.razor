@@ -1,55 +1,92 @@
 @page "/gameEvent"
+@using Heron.MudCalendar
 @using Microsoft.EntityFrameworkCore
 @using dakg;
 @inject BloggingContext DbContext
 
 <h3>게임 이벤트 일정</h3>
 
-<input type="date" @bind="StartDate" />
+<input type="date" @bind="_start" />
 
-@if (StartDate != DateTime.MinValue)
+@if (_start != DateTime.MinValue)
 {
-    <p>선택한 날짜: @StartDate.ToString("yyyy-MM-dd")</p>
+    <p>선택한 날짜: @_start.ToString("yyyy-MM-dd")</p>
 }
 
-<input type="date" @bind="EndDate" />
+<input type="date" @bind="_end" />
 
-@if (EndDate != DateTime.MinValue)
+@if (_end != DateTime.MinValue)
 {
-    <p>선택한 날짜: @EndDate.ToString("yyyy-MM-dd")</p>
+    <p>선택한 날짜: @_end.ToString("yyyy-MM-dd")</p>
 }
 
 <!-- 이벤트 추가 폼 -->
-<input type="text" @bind="NewEventName" placeholder="이벤트 이름 입력" />
+<input type="text" @bind="_eventName" placeholder="이벤트 이름 입력" />
 <button @onclick="AddEvent">이벤트 추가</button>
 
+<MudCalendar Items="_events" MonthCellMinHeight="115"/>
+
+<MudTable Items="@_events.Take(4)" Hover="true" MultiSelection="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+    <HeaderContent>
+        <MudTh>Start</MudTh>
+        <MudTh>End</MudTh>
+        <MudTh>Name</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Start">@context.Start</MudTd>
+        <MudTd DataLabel="End">@context.End</MudTd>
+        <MudTd DataLabel="Name">@context.Text</MudTd>
+        @* <MudTd>
+            <MudButton OnClick="() => Foo()" Color="Color.Primary">수정</MudButton>
+        </MudTd> *@
+    </RowTemplate>
+</MudTable>
+
 @code {
-    private DateTime StartDate { get; set; } = DateTime.Today;
-    private DateTime EndDate { get; set; } = DateTime.Today;
-    private string NewEventName { get; set; } = "";
+    private DateTime _start { get; set; } = DateTime.Today;
+    private DateTime _end { get; set; } = DateTime.Today;
+    private string _eventName { get; set; } = "";
 
-    private List<dakg.GameEvent> GameEvents { get; set; } = new List<dakg.GameEvent>();
-
+    private List<dakg.GameEvent> _gameEvents { get; set; } = new List<dakg.GameEvent>();
+    private List<CalendarItem> _events;
+    
     private async void AddEvent()
     {
-        if (string.IsNullOrWhiteSpace(NewEventName)) return;
-
+        if (string.IsNullOrWhiteSpace(_eventName)) return;
+        
         var gameEvent = new dakg.GameEvent()
         {
-            StartTime = StartDate,
-            EndTime = EndDate,
-            Name = NewEventName,
+            StartTime = _start,
+            EndTime = _end,
+            Name = _eventName,
         };
 
         await DbContext.Events.AddAsync(gameEvent);
         await DbContext.SaveChangesAsync();
 
-        StartDate = EndDate = DateTime.Today;
-        NewEventName = string.Empty;
+        _start = _end = DateTime.Today;
+        _eventName = string.Empty;
+        _events.Add(ConvertToCalendarItem(gameEvent));
     }
 
     protected override async Task OnInitializedAsync()
     {
-        GameEvents = await DbContext.Events.ToListAsync();
+        _gameEvents = await DbContext.Events.ToListAsync();
+        _events = _gameEvents.Select(ge => ConvertToCalendarItem(ge)).ToList();
+    }
+
+    CalendarItem ConvertToCalendarItem(dakg.GameEvent ge)
+    {
+        return new CalendarItem()
+        {
+            Start = ge.StartTime,
+            End = ge.EndTime,
+            Text = ge.Name
+        };
+    }
+
+    void Foo()
+    {
+
     }
 }

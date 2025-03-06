@@ -3,5 +3,3 @@ main/bin/
 main/obj
 blazor/bin
 blazor/obj
-
-main/DbFile/local.db
