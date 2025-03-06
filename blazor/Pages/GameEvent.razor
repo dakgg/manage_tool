@@ -7,23 +7,15 @@
 
 <h3>게임 이벤트 일정</h3>
 
-<input type="date" @bind="_start" />
-
-@if (_start != DateTime.MinValue)
-{
-    <p>선택한 날짜: @_start.ToString("yyyy-MM-dd")</p>
-}
-
-<input type="date" @bind="_end" />
-
-@if (_end != DateTime.MinValue)
-{
-    <p>선택한 날짜: @_end.ToString("yyyy-MM-dd")</p>
-}
-
-<!-- 이벤트 추가 폼 -->
-<input type="text" @bind="_eventName" placeholder="이벤트 이름 입력" />
-<button @onclick="AddEventAsync">이벤트 추가</button>
+<MudStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center"
+    Style="width: 650px; height: 450px; display: flex; margin: auto;">
+    <MudDateRangePicker PickerVariant="PickerVariant.Static" @bind-DateRange="@_dateRange" Margin="Margin.Dense" />
+    <MudTextField Label="Enter Event Name" @bind-Value="@_eventName" />
+    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Default"
+        OnClick="AddEventAsync">
+        Add
+    </MudButton>
+</MudStack>
 
 <MudCalendar Class="mb-4 mt-4" Items="_events" MonthCellMinHeight="115" ShowDay="false" ShowWeek="false">
     <CellTemplate>
@@ -72,8 +64,6 @@
         public Color Color { get; set; } = Color.Primary;
     }
 
-    DateTime _start { get; set; } = DateTime.Today;
-    DateTime _end { get; set; } = DateTime.Today;
     string _eventName { get; set; } = "";
 
     List<dakg.GameEvent> _gameEvents { get; set; } = new List<dakg.GameEvent>();
@@ -81,6 +71,7 @@
     HashSet<DakgGameEventItem> _selectedItems = new();
     List<int> _selectedPks = new();
     bool _isDisable = true;
+    DateRange _dateRange;
 
     async void AddEventAsync()
     {
@@ -88,15 +79,15 @@
 
         var gameEvent = new dakg.GameEvent()
             {
-                StartTime = _start,
-                EndTime = _end,
+                StartTime = _dateRange.Start.Value,
+                EndTime = _dateRange.End.Value,
                 Name = _eventName,
             };
 
         await DbContext.Events.AddAsync(gameEvent);
         await DbContext.SaveChangesAsync();
 
-        _start = _end = DateTime.Today;
+        _dateRange = new();
         _eventName = string.Empty;
         _events.Add(ConvertToCalendarItem(gameEvent));
     }
