@@ -25,6 +25,20 @@ namespace main.Migrations
                 {
                     table.PrimaryKey("PK_Events", x => x.Id);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    NickName = table.Column<string>(type: "TEXT", nullable: false),
+                    ProfileImage = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                });
         }
 
         /// <inheritdoc />
@@ -32,6 +46,9 @@ namespace main.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Events");
+
+            migrationBuilder.DropTable(
+                name: "Users");
         }
     }
 }

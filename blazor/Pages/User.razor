@@ -1,0 +1,72 @@
+@page "/user"
+@using Microsoft.EntityFrameworkCore
+@inject CommonContext DbContext
+@inject IDialogService DialogService
+
+<MudTable Items="@_users" Hover="true" Filter="new Func<dakg.User, bool>(FilterFunc)">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">유저정보</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start"
+            AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh Style="width: 100px">Id</MudTh>
+        <MudTh>Portrait</MudTh>
+        <MudTh>Name</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd>
+            <img src="@($"/resource/portrait/{context.ProfileImage}.png")" alt="Profile" width="50" height="50"
+                style="border-radius: 50%;" />
+        </MudTd>
+        <MudTd DataLabel="Name">@context.NickName</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+<MudButton @onclick="OpenDialogAsync" Variant="Variant.Filled" Color="Color.Primary">
+    유저 생성
+</MudButton>
+
+
+@code {
+    List<dakg.User> _users;
+    string _searchString;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _users = await DbContext.Users.ToListAsync();
+    }
+
+    async Task OpenDialogAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        var dr = await DialogService.ShowAsync<CreateUser>("유저 생성", options);
+        var result = await dr.Result;
+
+        if (result.Data is dakg.User user)
+        {
+            DbContext.Users.Add(user);
+            await DbContext.SaveChangesAsync();
+            _users = await DbContext.Users.ToListAsync();
+        }
+    }
+
+    public bool FilterFunc(dakg.User user) => FilterFuncInternal(user, _searchString);
+
+    public bool FilterFuncInternal(dakg.User user, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        if (user.NickName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    }
+}

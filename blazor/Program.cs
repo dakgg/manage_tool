@@ -7,12 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
-builder.Services.AddDbContext<BloggingContext>(option => option.UseSqlite());
+builder.Services.AddDbContext<CommonContext>(option => option.UseSqlite());
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<BloggingContext>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<CommonContext>();
     using (var connection = dbContext.Database.GetDbConnection())
     {
         connection.Open();

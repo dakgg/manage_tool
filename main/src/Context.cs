@@ -1,18 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 
-public class BloggingContext : DbContext
+public class CommonContext : DbContext
 {
     public DbSet<dakg.GameEvent> Events { get; set; }
-
+    public DbSet<dakg.User> Users { get; set; }
     public string DbPath { get; }
 
-    public BloggingContext()
+    public CommonContext()
     {
         DbPath = System.IO.Path.Join(Directory.GetCurrentDirectory(), "../main", "DbFile", "local.db");
         Console.WriteLine(DbPath);
     }
 
-    public BloggingContext(DbContextOptions<BloggingContext> options) : base(options)
+    public CommonContext(DbContextOptions<CommonContext> options) : base(options)
     {
         DbPath = System.IO.Path.Join(Directory.GetCurrentDirectory(), "../main", "DbFile", "local.db");
         Console.WriteLine(DbPath);

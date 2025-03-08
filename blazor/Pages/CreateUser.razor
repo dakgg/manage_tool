@@ -1,0 +1,34 @@
+<MudDialog>
+    <DialogContent>
+        <MudTextField Label="Enter Name" @bind-Value="@_nickName" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="GenerateUser" Color="Color.Secondary">생성</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    const int IMAGE_COUNT = 4;
+
+    [CascadingParameter] IMudDialogInstance _dialog { get; set; }
+    [Inject] ISnackbar _snackbar { get; set; }
+
+    string _nickName;
+
+    void GenerateUser()
+    {
+        if (string.IsNullOrWhiteSpace(_nickName))
+        {
+            _snackbar.Add("nickname is invalid");
+            return;
+        }
+
+        var index = new Random(Guid.NewGuid().GetHashCode()).Next(IMAGE_COUNT);
+        var user = new dakg.User()
+        {
+            NickName = _nickName,
+            ProfileImage = $"portrait_{index}"
+        };
+        _dialog.Close<dakg.User>(user);
+    }
+}

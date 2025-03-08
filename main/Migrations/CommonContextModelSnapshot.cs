@@ -8,15 +8,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace main.Migrations
 {
-    [DbContext(typeof(BloggingContext))]
-    partial class BloggingContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(CommonContext))]
+    partial class CommonContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.12");
 
-            modelBuilder.Entity("GameEvent", b =>
+            modelBuilder.Entity("dakg.GameEvent", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -35,6 +35,25 @@ namespace main.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Events");
+                });
+
+            modelBuilder.Entity("dakg.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("NickName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProfileImage")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
                 });
 #pragma warning restore 612, 618
         }
